@@ -694,7 +694,7 @@ void rxSerialTask2(void* parameter) {
 
             rxStr[rxStrCount] = lastchar;
             if (lastchar == '\n' || lastchar == '\r') {
-                if (strncmp(rxStr, "receive buffer full, drop the current frame", 43) == 0 && millisDiff(modemResetHoldoff) > 2000) {
+                if (strncmp(rxStr, "receive buffer full, drop the current frame", 43) == 0 && millisDiff(modemResetHoldoff) > 20000) {
                     modemResetHoldoff = millis();
                     vTaskDelay(100 / portTICK_PERIOD_MS);
                     config.runStatus = RUNSTATUS_STOP;
