@@ -309,7 +309,7 @@ void clearPending(tagRecord* taginfo) {
 }
 
 void initAPconfig() {
-    DynamicJsonDocument APconfig(500);
+    DynamicJsonDocument APconfig(1000);
     File configFile = contentFS->open("/current/apconfig.json", "r");
     if (configFile) {
         DeserializationError error = deserializeJson(APconfig, configFile);
