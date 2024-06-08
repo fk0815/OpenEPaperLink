@@ -9,6 +9,7 @@
 #include "serialap.h"
 #include "tag_db.h"
 #include "web.h"
+#include "wifimanager.h"
 
 #define UDPIP IPAddress(239, 10, 0, 1)
 #define UDPPORT 16033
@@ -33,7 +34,7 @@ UDPcomm::~UDPcomm() {
 void UDPcomm::init() {
     if (udp.listenMulticast(UDPIP, UDPPORT)) {
         udp.onPacket([this](AsyncUDPPacket packet) {
-            if (packet.remoteIP() != WiFi.localIP()) {
+            if (packet.remoteIP() != wm.localIP()) {
                 this->processPacket(packet);
             }
         });
@@ -78,7 +79,7 @@ void UDPcomm::processPacket(AsyncUDPPacket packet) {
         }
         case PKT_APLIST_REQ: {
             APlist APitem;
-            APitem.src = WiFi.localIP();
+            APitem.src = wm.localIP();
             strcpy(APitem.alias, config.alias);
             APitem.channelId = curChannel.channel;
             APitem.tagCount = getTagCount();
@@ -144,7 +145,7 @@ void autoselect(void* pvParameters) {
 
 void UDPcomm::getAPList() {
     APlist APitem;
-    APitem.src = WiFi.localIP();
+    APitem.src = wm.localIP();
     strcpy(APitem.alias, config.alias);
     APitem.channelId = curChannel.channel;
     APitem.tagCount = getTagCount();
