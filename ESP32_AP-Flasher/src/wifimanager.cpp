@@ -143,7 +143,7 @@ void WifiManager::initEth() {
 }
 
 bool WifiManager::connectToWifi() {
-    if (wifiStatus == ETHERNET)
+    if (wifiStatus == ETHERNET || eth_connected)
         return true;
 
     Preferences preferences;
