@@ -20,6 +20,8 @@ uint8_t x_position = 0;
 
 static bool eth_init = false;
 static bool eth_connected = false;
+static bool eth_ip_ok = false;
+static long eth_timeout = 0;
 
 WifiManager::WifiManager() {
     _reconnectIntervalCheck = 5000;
@@ -48,9 +50,13 @@ void WifiManager::terminalLog(String text) {
 }
 
 void WifiManager::poll() {
-    if (eth_connected)
+    if (eth_connected) {
         wifiStatus = ETHERNET;
-    else if(!eth_connected && wifiStatus == ETHERNET) {
+        if(!eth_ip_ok && eth_timeout != 0 && millis() - eth_timeout > 2000) {
+            eth_timeout = 0;
+            eth_connected = false;
+        }
+    } else if(!eth_connected && wifiStatus == ETHERNET) {
         wifiStatus = NOINIT;
         _APstarted = false;
         WiFi.mode(WIFI_STA);
@@ -358,9 +364,14 @@ void WifiManager::WiFiEvent(WiFiEvent_t event) {
             eventname = "ETH Started";
             //set eth hostname here
             ETH.setHostname(buildHostname(ESP_MAC_ETH).c_str());
+            eth_timeout = 0;
             break;
         case ARDUINO_EVENT_ETH_CONNECTED:
             eventname = "ETH Connected";
+            WiFi.mode(WIFI_MODE_NULL);
+            WiFi.disconnect();
+            eth_connected = true;
+            eth_timeout = millis();
             break;
         case ARDUINO_EVENT_ETH_GOT_IP:
             if (ETH.fullDuplex()) {
@@ -368,18 +379,21 @@ void WifiManager::WiFiEvent(WiFiEvent_t event) {
             } else {
                 eventname = "ETH MAC: " + ETH.macAddress() + ", IPv4: " + ETH.localIP().toString() + ", " + ETH.linkSpeed() + "Mbps";
             }
-            WiFi.mode(WIFI_MODE_NULL);
-            WiFi.disconnect();
-            eth_connected = true;
+            eth_ip_ok = true;
             init_udp();
+            eth_timeout = 0;
             break;
         case ARDUINO_EVENT_ETH_DISCONNECTED:
             eventname = "ETH Disconnected";
             eth_connected = false;
+            eth_ip_ok = false;
+            eth_timeout = 0;
             break;
         case ARDUINO_EVENT_ETH_STOP:
             eventname = "ETH Stopped";
             eth_connected = false;
+            eth_ip_ok = false;
+            eth_timeout = 0;
             break;
 
         default:
